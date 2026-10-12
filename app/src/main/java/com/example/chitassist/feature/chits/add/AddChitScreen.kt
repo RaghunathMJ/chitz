@@ -5,13 +5,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.chitassist.domain.model.DividendMode
 import kotlinx.coroutines.flow.collectLatest
@@ -78,12 +83,30 @@ fun AddChitScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(if (chitId != null) "Edit Chit" else "Add Chit") },
+                title = {
+                    Column {
+                        Text(
+                            "CHIT FUND",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            if (chitId != null) "Edit Chit" else "Add New Chit",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                )
             )
         }
     ) { paddingValues ->
@@ -91,136 +114,228 @@ fun AddChitScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
                 .verticalScroll(scrollState),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            OutlinedTextField(
-                value = state.name,
-                onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnNameChanged(it)) },
-                label = { Text("Chit Name") },
-                modifier = Modifier.fillMaxWidth()
-            )
+            Spacer(modifier = Modifier.height(8.dp))
 
-            OutlinedTextField(
-                value = state.organizer,
-                onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnOrganizerChanged(it)) },
-                label = { Text("Organizer (Optional)") },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = state.totalValue,
-                onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnTotalValueChanged(it)) },
-                label = { Text("Total Value") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = state.monthlyContribution,
-                onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnMonthlyContributionChanged(it)) },
-                label = { Text("Contribution Amount") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = state.numberOfInstallments,
-                onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnInstallmentsChanged(it)) },
-                label = { Text("Number of Installments") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = state.commissionAmount,
-                onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnCommissionAmountChanged(it)) },
-                label = { Text("Organizer Commission (Amount)") },
-                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            OutlinedTextField(
-                value = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(state.startDate)),
-                onValueChange = {},
-                label = { Text("Start Date") },
-                readOnly = true,
-                trailingIcon = {
-                    IconButton(onClick = { showDatePicker = true }) {
-                        Icon(Icons.Default.CalendarToday, contentDescription = "Select Date")
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Text("Frequency (Interval in months)", style = MaterialTheme.typography.labelLarge)
-            
-            var expanded by remember { mutableStateOf(false) }
-            val intervals = listOf(
-                1 to "Monthly",
-                2 to "Every 2 Months",
-                3 to "Quarterly (3 Months)",
-                4 to "Every 4 Months",
-                6 to "Half Yearly (6 Months)"
-            )
-            val selectedLabel = intervals.find { it.first == state.intervalMonths }?.second ?: "Custom (${state.intervalMonths} months)"
-
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                OutlinedTextField(
-                    value = selectedLabel,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor()
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
-                    intervals.forEach { (interval, label) ->
-                        DropdownMenuItem(
-                            text = { Text(label) },
-                            onClick = {
-                                viewModel.onIntent(AddChitContract.Intent.OnIntervalChanged(interval))
-                                expanded = false
-                            }
+                    Text(
+                        "Basic Information",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    OutlinedTextField(
+                        value = state.name,
+                        onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnNameChanged(it)) },
+                        label = { Text("Chit Name", fontSize = 12.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        textStyle = MaterialTheme.typography.bodyMedium
+                    )
+
+                    OutlinedTextField(
+                        value = state.organizer,
+                        onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnOrganizerChanged(it)) },
+                        label = { Text("Organizer (Optional)", fontSize = 12.sp) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        textStyle = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = state.totalValue,
+                            onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnTotalValueChanged(it)) },
+                            label = { Text("Total Value (₹)", fontSize = 12.sp) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            textStyle = MaterialTheme.typography.bodyMedium
+                        )
+
+                        OutlinedTextField(
+                            value = state.numberOfInstallments,
+                            onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnInstallmentsChanged(it)) },
+                            label = { Text("Installments", fontSize = 12.sp) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            modifier = Modifier.weight(0.8f),
+                            shape = RoundedCornerShape(12.dp),
+                            textStyle = MaterialTheme.typography.bodyMedium
                         )
                     }
                 }
             }
 
-            Text("Dividend Distribution Mode", style = MaterialTheme.typography.labelLarge)
-            Row(
+            Card(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                shape = RoundedCornerShape(20.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
-                FilterChip(
-                    selected = state.dividendMode == DividendMode.EXCLUDING_WINNER,
-                    onClick = { viewModel.onIntent(AddChitContract.Intent.OnDividendModeChanged(DividendMode.EXCLUDING_WINNER)) },
-                    label = { Text("Excluding Winner") }
-                )
-                FilterChip(
-                    selected = state.dividendMode == DividendMode.INCLUDING_WINNER,
-                    onClick = { viewModel.onIntent(AddChitContract.Intent.OnDividendModeChanged(DividendMode.INCLUDING_WINNER)) },
-                    label = { Text("Including Winner") }
-                )
-            }
+                Column(
+                    modifier = Modifier.padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        "Financials & Schedule",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
 
-            Spacer(modifier = Modifier.height(16.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = state.monthlyContribution,
+                            onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnMonthlyContributionChanged(it)) },
+                            label = { Text("Inst. Amt (₹)", fontSize = 12.sp) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            textStyle = MaterialTheme.typography.bodyMedium
+                        )
+
+                        OutlinedTextField(
+                            value = state.commissionAmount,
+                            onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnCommissionAmountChanged(it)) },
+                            label = { Text("Comm. (₹)", fontSize = 12.sp) },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(12.dp),
+                            textStyle = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+                    OutlinedTextField(
+                        value = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(state.startDate)),
+                        onValueChange = {},
+                        label = { Text("Start Date", fontSize = 12.sp) },
+                        readOnly = true,
+                        trailingIcon = {
+                            IconButton(onClick = { showDatePicker = true }) {
+                                Icon(Icons.Default.CalendarToday, contentDescription = "Select Date")
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        textStyle = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            "Frequency",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        
+                        var expanded by remember { mutableStateOf(false) }
+                        val intervals = listOf(
+                            1 to "Monthly",
+                            2 to "Every 2 Months",
+                            3 to "Quarterly (3 Months)",
+                            4 to "Every 4 Months",
+                            6 to "Half Yearly (6 Months)"
+                        )
+                        val selectedLabel = intervals.find { it.first == state.intervalMonths }?.second ?: "Custom (${state.intervalMonths} months)"
+
+                        ExposedDropdownMenuBox(
+                            expanded = expanded,
+                            onExpandedChange = { expanded = !expanded }
+                        ) {
+                            OutlinedTextField(
+                                value = selectedLabel,
+                                onValueChange = {},
+                                readOnly = true,
+                                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .menuAnchor(),
+                                shape = RoundedCornerShape(12.dp),
+                                textStyle = MaterialTheme.typography.bodyMedium
+                            )
+                            ExposedDropdownMenu(
+                                expanded = expanded,
+                                onDismissRequest = { expanded = false }
+                            ) {
+                                intervals.forEach { (interval, label) ->
+                                    DropdownMenuItem(
+                                        text = { Text(label) },
+                                        onClick = {
+                                            viewModel.onIntent(AddChitContract.Intent.OnIntervalChanged(interval))
+                                            expanded = false
+                                        }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            "Dividend Distribution Mode",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            FilterChip(
+                                selected = state.dividendMode == DividendMode.EXCLUDING_WINNER,
+                                onClick = { viewModel.onIntent(AddChitContract.Intent.OnDividendModeChanged(DividendMode.EXCLUDING_WINNER)) },
+                                label = { Text("Excl. Winner", fontSize = 12.sp) },
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                            FilterChip(
+                                selected = state.dividendMode == DividendMode.INCLUDING_WINNER,
+                                onClick = { viewModel.onIntent(AddChitContract.Intent.OnDividendModeChanged(DividendMode.INCLUDING_WINNER)) },
+                                label = { Text("Incl. Winner", fontSize = 12.sp) },
+                                shape = RoundedCornerShape(8.dp)
+                            )
+                        }
+                    }
+                }
+            }
 
             Button(
                 onClick = { viewModel.onIntent(AddChitContract.Intent.OnSaveClicked) },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !state.isLoading
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(56.dp),
+                enabled = !state.isLoading,
+                shape = RoundedCornerShape(16.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary
+                )
             ) {
-                Text("Save Chit")
+                Text(
+                    if (chitId != null) "Update Chit" else "Save Chit",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold
+                )
             }
+            
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }

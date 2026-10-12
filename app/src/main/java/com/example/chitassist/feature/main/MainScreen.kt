@@ -1,10 +1,15 @@
 package com.example.chitassist.feature.main
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -34,14 +39,33 @@ fun MainScreen(
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                modifier = Modifier
+                    .fillMaxWidth(),
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest,
+                tonalElevation = 8.dp
+            ) {
                 val navBackStackEntry by navController.currentBackStackEntryAsState()
                 val currentDestination = navBackStackEntry?.destination
                 items.forEach { item ->
+                    val isSelected = currentDestination?.hierarchy?.any { it.route == item.route } == true
+                    
                     NavigationBarItem(
-                        icon = { Icon(item.icon, contentDescription = item.title) },
-                        label = { Text(item.title) },
-                        selected = currentDestination?.hierarchy?.any { it.route == item.route } == true,
+                        icon = { 
+                            Icon(
+                                item.icon, 
+                                contentDescription = item.title,
+                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            ) 
+                        },
+                        label = { 
+                            Text(
+                                item.title,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                            ) 
+                        },
+                        selected = isSelected,
                         onClick = {
                             navController.navigate(item.route) {
                                 popUpTo(navController.graph.findStartDestination().id) {
@@ -50,7 +74,14 @@ fun MainScreen(
                                 launchSingleTop = true
                                 restoreState = true
                             }
-                        }
+                        },
+                        colors = NavigationBarItemDefaults.colors(
+                            selectedIconColor = MaterialTheme.colorScheme.primary,
+                            selectedTextColor = MaterialTheme.colorScheme.primary,
+                            indicatorColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f),
+                            unselectedIconColor = MaterialTheme.colorScheme.outline,
+                            unselectedTextColor = MaterialTheme.colorScheme.outline
+                        )
                     )
                 }
             }
@@ -81,7 +112,8 @@ fun MainScreen(
                     },
                     onEditChit = { chitId ->
                         rootNavController.navigate(Screen.ChitAdd.createRoute(chitId))
-                    }
+                    },
+                    onAddChit = { rootNavController.navigate(Screen.ChitAdd.createRoute()) }
                 )
             }
             composable(Screen.Calculator.route) {
@@ -89,7 +121,11 @@ fun MainScreen(
             }
             composable(Screen.Profile.route) {
                 ProfileScreen(
-                    onBackClick = { navController.popBackStack() },
+                    onBackClick = { 
+                        if (!navController.popBackStack()) {
+                            // Already at start, maybe do nothing or handle accordingly
+                        }
+                    },
                     onLogoutClick = onLogout,
                     onEditProfileClick = { rootNavController.navigate(Screen.EditProfile.route) }
                 )

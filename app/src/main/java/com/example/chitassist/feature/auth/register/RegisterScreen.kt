@@ -34,7 +34,7 @@ fun RegisterScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(title = { Text("Register") })
+            TopAppBar(title = { Text("Register", style = MaterialTheme.typography.headlineSmall) })
         }
     ) { paddingValues ->
         Column(

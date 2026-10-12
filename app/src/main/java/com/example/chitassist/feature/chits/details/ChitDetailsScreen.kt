@@ -1,19 +1,25 @@
 package com.example.chitassist.feature.chits.details
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.chitassist.domain.model.Payment
 import com.example.chitassist.domain.model.PaymentStatus
@@ -44,12 +50,32 @@ fun ChitDetailsScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text(state.chit?.name ?: "Chit Details") },
+                title = {
+                    Column {
+                        Text(
+                            "CHIT FUND",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.secondary,
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(
+                            state.chit?.name ?: "Chit Details",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.Default.ArrowBack, contentDescription = "Back")
                     }
-                }
+                },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                )
             )
         }
     ) { paddingValues ->
@@ -62,65 +88,87 @@ fun ChitDetailsScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(16.dp),
+                    .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 state.chit?.let { chit ->
                     item {
-                        val statusColor = when (chit.status.name) {
-                            "ACTIVE" -> MaterialTheme.colorScheme.primary
-                            "COMPLETED" -> androidx.compose.ui.graphics.Color(0xFF4CAF50)
-                            else -> MaterialTheme.colorScheme.error
-                        }
+                        Spacer(modifier = Modifier.height(4.dp))
 
-                        Card(modifier = Modifier.fillMaxWidth()) {
-                            Column(modifier = Modifier.padding(16.dp)) {
+                        Card(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(24.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+                        ) {
+                            Column(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp)
+                            ) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.Top
+                                    verticalAlignment = Alignment.CenterVertically
                                 ) {
-                                    Column(modifier = Modifier.weight(1f)) {
+                                    Column {
                                         Text(
-                                            text = "Organizer: ${chit.organizer ?: "N/A"}",
-                                            style = MaterialTheme.typography.bodyLarge
+                                            text = "TOTAL VALUE",
+                                            style = MaterialTheme.typography.labelMedium,
+                                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                                            fontWeight = FontWeight.Bold
                                         )
                                         Text(
-                                            text = "Dividend: ${chit.dividendMode.name.replace("_", " ")}",
-                                            style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.outline
+                                            text = "₹${chit.totalValue}",
+                                            style = MaterialTheme.typography.headlineMedium,
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            fontWeight = FontWeight.Bold
                                         )
                                     }
-
-                                    val statusSuffix = if (chit.isWon) " (Won in #${chit.winningInstallmentNumber})" else " (Not Won)"
-                                    val statusText = if (chit.status.name == "ACTIVE") {
-                                        "ACTIVE$statusSuffix"
-                                    } else {
-                                        chit.status.name
-                                    }
-
+                                    
                                     Surface(
-                                        color = statusColor.copy(alpha = 0.1f),
-                                        shape = MaterialTheme.shapes.extraSmall
+                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(8.dp)
                                     ) {
                                         Text(
-                                            text = statusText,
+                                            text = chit.status.name,
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = statusColor,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
+                                            color = MaterialTheme.colorScheme.onPrimary,
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text(text = "Total Value: ₹${chit.totalValue}")
-                                Text(text = "Monthly Contribution: ₹${chit.monthlyContribution}")
-                                Text(text = "Installments: ${chit.numberOfInstallments}")
+                                Spacer(modifier = Modifier.height(12.dp))
+                                
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    DetailItem("Installments", chit.numberOfInstallments.toString(), MaterialTheme.colorScheme.onPrimary)
+                                    DetailItem("Monthly Amt", "₹${chit.monthlyContribution}", MaterialTheme.colorScheme.onPrimary)
+                                    DetailItem("Dividend", chit.dividendMode.name.take(4), MaterialTheme.colorScheme.onPrimary)
+                                }
                             }
                         }
-                        Spacer(modifier = Modifier.height(16.dp))
-                        Text(text = "Payments", style = MaterialTheme.typography.titleMedium)
+                        
+                        if (chit.organizer != null) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text(
+                                text = "Organizer: ${chit.organizer}",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.outline,
+                                modifier = Modifier.padding(horizontal = 4.dp)
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Payment Schedule",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
 
@@ -167,50 +215,51 @@ fun PaymentItem(
 
     Card(
         modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(
             containerColor = if (payment.status == PaymentStatus.PAID) 
-                MaterialTheme.colorScheme.surfaceVariant 
+                MaterialTheme.colorScheme.surfaceContainerHigh
             else 
-                MaterialTheme.colorScheme.surface
-        )
+                MaterialTheme.colorScheme.surfaceContainerLowest
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
+        Column(modifier = Modifier.padding(12.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Column(modifier = Modifier.weight(1f)) {
-                    if (payment.chitName.isNotBlank()) {
-                        Text(
-                            text = payment.chitName,
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
                     Text(
-                        text = "Installment #${payment.installmentNumber}",
-                        style = MaterialTheme.typography.titleMedium
+                        text = "INSTALLMENT #${payment.installmentNumber}",
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.secondary,
+                        fontWeight = FontWeight.Bold
                     )
                     Text(
                         text = "Due: ${dateFormat.format(Date(payment.dueDate))}",
-                        style = MaterialTheme.typography.bodySmall
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.outline
                     )
                 }
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        text = if (payment.status == PaymentStatus.PAID) "Paid" else "Pending",
-                        style = MaterialTheme.typography.labelMedium,
+                        text = if (payment.status == PaymentStatus.PAID) "PAID" else "PENDING",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.Bold,
                         color = if (payment.status == PaymentStatus.PAID) 
-                            MaterialTheme.colorScheme.primary 
+                            androidx.compose.ui.graphics.Color(0xFF4CAF50)
                         else 
                             MaterialTheme.colorScheme.outline
                     )
+                    Spacer(modifier = Modifier.width(4.dp))
                     Checkbox(
                         checked = payment.status == PaymentStatus.PAID,
                         onCheckedChange = { onStatusChange(it, bidAmountText) },
-                        enabled = canChangeStatus
+                        enabled = canChangeStatus,
+                        modifier = Modifier.size(32.dp)
                     )
                 }
             }
@@ -221,54 +270,95 @@ fun PaymentItem(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Checkbox(
-                    checked = payment.isWinner,
-                    onCheckedChange = onWinnerChange,
+                Surface(
+                    color = if (payment.isWinner) MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f) else androidx.compose.ui.graphics.Color.Transparent,
+                    shape = RoundedCornerShape(8.dp),
+                    onClick = { if (isWinnerEnabled) onWinnerChange(!payment.isWinner) },
                     enabled = isWinnerEnabled
-                )
-                Text(
-                    text = "I won this bid",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (isWinnerEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline
-                )
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = payment.isWinner,
+                            onClick = null,
+                            enabled = isWinnerEnabled,
+                            modifier = Modifier.size(20.dp)
+                        )
+                        Spacer(modifier = Modifier.width(6.dp))
+                        Text(
+                            text = "Won this auction",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = if (payment.isWinner) FontWeight.Bold else FontWeight.Normal,
+                            color = if (isWinnerEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline
+                        )
+                    }
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
                 verticalAlignment = Alignment.Bottom
             ) {
                 OutlinedTextField(
                     value = bidAmountText,
-                    onValueChange = {
-                        bidAmountText = it
-                    },
-                    label = { Text("Winning Bid Amount") },
-                    modifier = Modifier.weight(1f),
+                    onValueChange = { bidAmountText = it },
+                    label = { Text("Bid Amt (₹)", fontSize = 10.sp) },
+                    modifier = Modifier.weight(1.2f),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     singleLine = true,
-                    enabled = payment.status != PaymentStatus.PAID && canChangeStatus
+                    enabled = payment.status != PaymentStatus.PAID && canChangeStatus,
+                    shape = RoundedCornerShape(12.dp),
+                    textStyle = MaterialTheme.typography.bodySmall
                 )
                 
                 Column(
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.weight(1.5f),
                     horizontalAlignment = Alignment.End
                 ) {
                     if (payment.dividend > 0) {
                         Text(
-                            text = "Dividend: ${currencyFormat.format(payment.dividend)}",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.primary
+                            text = "Div: + ₹${payment.dividend.toInt()}",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = androidx.compose.ui.graphics.Color(0xFF4CAF50),
+                            fontWeight = FontWeight.Bold
                         )
                     }
                     Text(
-                        text = "Net: ${currencyFormat.format(payment.netAmount)}",
-                        style = MaterialTheme.typography.titleMedium
+                        text = currencyFormat.format(payment.netAmount),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = "NET PAYABLE",
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 7.sp,
+                        color = MaterialTheme.colorScheme.outline
                     )
                 }
             }
         }
+    }
+}
+
+@Composable
+fun DetailItem(label: String, value: String, color: androidx.compose.ui.graphics.Color) {
+    Column {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = color.copy(alpha = 0.7f)
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium,
+            color = color,
+            fontWeight = FontWeight.Bold
+        )
     }
 }

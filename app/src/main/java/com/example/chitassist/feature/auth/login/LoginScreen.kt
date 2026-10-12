@@ -36,7 +36,7 @@ fun LoginScreen(
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
-            TopAppBar(title = { Text("Login") })
+            TopAppBar(title = { Text("Login", style = MaterialTheme.typography.headlineSmall) })
         }
     ) { paddingValues ->
         Column(

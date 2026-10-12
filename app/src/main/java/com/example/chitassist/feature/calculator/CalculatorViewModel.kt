@@ -70,15 +70,17 @@ class CalculatorViewModel @Inject constructor() : ViewModel() {
             val commissionPerMonth = totalCommission / months
             
             val discount = if (bidType == CalculatorContract.BidType.TOTAL_BID) {
-                (amount - bidAmount).coerceAtLeast(0.0) - totalCommission
+                (amount - bidAmount).coerceAtLeast(0.0)
             } else {
-                bidAmount - totalCommission
+                bidAmount
             }.coerceAtLeast(0.0)
+
+            val netDiscount = (discount - totalCommission).coerceAtLeast(0.0)
             
             val dividend = com.example.chitassist.domain.model.DividendCalculator.calculateDividend(
                 totalMembers = months,
                 installmentNumber = installmentNumber,
-                discount = discount,
+                discount = netDiscount,
                 mode = dividendMode
             )
 
