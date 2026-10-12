@@ -46,6 +46,17 @@ val OnError = Color(0xFFFFFFFF)
 val ErrorContainer = Color(0xFFFFDAD6)
 val OnErrorContainer = Color(0xFF410002)
 
+// Status Colors
+val Success = Color(0xFF4CAF50)
+val Warning = Color(0xFFD32F2F)
+val WarningContainer = Color(0xFFFFEBEE)
+
+// UI Element Colors
+val BorderColor = Color(0xFFF1F3F4)
+val TrackColor = Color(0xFFE8EAF6)
+val TextPrimary = Color(0xFF0D1B3E)
+val TextSecondary = Color(0xFF1D2129)
+
 // Surface Containers
 val SurfaceContainerHighest = Color(0xFFE1E2EC)
 val SurfaceContainerHigh = Color(0xFFE7E8F0)

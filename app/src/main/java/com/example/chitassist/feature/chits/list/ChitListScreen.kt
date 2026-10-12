@@ -131,7 +131,7 @@ fun ChitListScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(16.dp),
+                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(state.chits) { chit ->
@@ -141,9 +141,6 @@ fun ChitListScreen(
                             onEdit = { viewModel.handleIntent(ChitListContract.Intent.EditChit(chit)) },
                             onDelete = { viewModel.handleIntent(ChitListContract.Intent.DeleteChit(chit)) }
                         )
-                    }
-                    item {
-                        Spacer(modifier = Modifier.height(80.dp))
                     }
                 }
             }
