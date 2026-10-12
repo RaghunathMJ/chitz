@@ -31,8 +31,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.compose.ui.tooling.preview.Preview
+import com.example.chitassist.core.ui.theme.*
+import com.example.chitassist.domain.model.Chit
 import com.example.chitassist.domain.model.ChitStatus
-import com.example.chitassist.domain.model.DividendMode
 import com.example.chitassist.domain.model.Payment
 import com.example.chitassist.domain.model.PaymentStatus
 import kotlinx.coroutines.flow.collectLatest
@@ -58,6 +60,28 @@ fun ChitDetailsScreen(
         }
     }
 
+    ChitDetailsContent(
+        state = state,
+        onNavigateBack = onNavigateBack,
+        onPaymentStatusChanged = { payment, isPaid, bidAmount ->
+            viewModel.onIntent(ChitDetailsContract.Intent.OnPaymentStatusChanged(payment, isPaid, bidAmount))
+        },
+        onWinnerStatusChanged = { payment, isWinner ->
+            viewModel.onIntent(ChitDetailsContract.Intent.OnWinnerStatusChanged(payment, isWinner))
+        },
+        snackbarHostState = snackbarHostState
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ChitDetailsContent(
+    state: ChitDetailsContract.State,
+    onNavigateBack: () -> Unit,
+    onPaymentStatusChanged: (Payment, Boolean, String) -> Unit,
+    onWinnerStatusChanged: (Payment, Boolean) -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+) {
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
@@ -67,14 +91,14 @@ fun ChitDetailsScreen(
                         Text(
                             "CHIT SCHEME",
                             style = MaterialTheme.typography.labelSmall,
-                            color = com.example.chitassist.core.ui.theme.Secondary,
+                            color = Secondary,
                             fontWeight = FontWeight.Bold
                         )
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Text(
                                 state.chit?.name ?: "Chit Details",
                                 style = MaterialTheme.typography.titleLarge,
-                                color = com.example.chitassist.core.ui.theme.TextSecondary,
+                                color = TextSecondary,
                                 fontWeight = FontWeight.Bold,
                                 maxLines = 1,
                                 overflow = TextOverflow.Ellipsis
@@ -84,7 +108,7 @@ fun ChitDetailsScreen(
                                 Box(
                                     modifier = Modifier
                                         .size(8.dp)
-                                        .background(com.example.chitassist.core.ui.theme.Success, CircleShape)
+                                        .background(Success, CircleShape)
                                 )
                             }
                         }
@@ -92,25 +116,25 @@ fun ChitDetailsScreen(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = com.example.chitassist.core.ui.theme.Primary)
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = com.example.chitassist.core.ui.theme.Background
+                    containerColor = Background
                 )
             )
         }
     ) { paddingValues ->
         if (state.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(color = com.example.chitassist.core.ui.theme.Primary)
+                CircularProgressIndicator(color = Primary)
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .background(com.example.chitassist.core.ui.theme.Background),
+                    .background(Background),
                 contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 32.dp)
             ) {
                 state.chit?.let { chit ->
@@ -128,8 +152,8 @@ fun ChitDetailsScreen(
                                     .background(
                                         Brush.verticalGradient(
                                             colors = listOf(
-                                                com.example.chitassist.core.ui.theme.PrimaryContainer,
-                                                com.example.chitassist.core.ui.theme.Primary
+                                                PrimaryContainer,
+                                                Primary
                                             )
                                         )
                                     )
@@ -147,7 +171,7 @@ fun ChitDetailsScreen(
                                             color = Color.White.copy(alpha = 0.7f),
                                             fontWeight = FontWeight.Bold
                                         )
-                                        val currencyFormat = remember { 
+                                        val currencyFormat = remember {
                                             java.text.NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
                                                 maximumFractionDigits = 0
                                             }
@@ -169,7 +193,7 @@ fun ChitDetailsScreen(
                                         )
                                     }
                                     
-                                    val statusColor = if (chit.status == ChitStatus.COMPLETED) com.example.chitassist.core.ui.theme.Success else com.example.chitassist.core.ui.theme.Secondary
+                                    val statusColor = if (chit.status == ChitStatus.COMPLETED) Success else Secondary
                                     Surface(
                                         color = statusColor.copy(alpha = 0.2f),
                                         shape = RoundedCornerShape(12.dp),
@@ -197,7 +221,7 @@ fun ChitDetailsScreen(
                                 ) {
                                     DetailItem("START DATE", SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(chit.startDate)), Color.White)
                                     DetailItem("DURATION", "${chit.numberOfInstallments} Mos", Color.White)
-                                    val currencyFormat = remember { 
+                                    val currencyFormat = remember {
                                         java.text.NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
                                             maximumFractionDigits = 0
                                         }
@@ -214,21 +238,21 @@ fun ChitDetailsScreen(
                                 modifier = Modifier.padding(horizontal = 12.dp)
                             ) {
                                 Icon(
-                                    Icons.Outlined.AccountBalanceWallet, 
-                                    contentDescription = null, 
+                                    Icons.Outlined.AccountBalanceWallet,
+                                    contentDescription = null,
                                     modifier = Modifier.size(16.dp),
-                                    tint = com.example.chitassist.core.ui.theme.Outline
+                                    tint = Outline
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
                                 Text(
                                     text = buildAnnotatedString {
                                         append("Organizer: ")
-                                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = com.example.chitassist.core.ui.theme.TextSecondary)) {
+                                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = TextSecondary)) {
                                             append(chit.organizer)
                                         }
                                     },
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = com.example.chitassist.core.ui.theme.Outline
+                                    color = Outline
                                 )
                             }
                         }
@@ -244,16 +268,16 @@ fun ChitDetailsScreen(
                                     text = "Installment Schedule",
                                     style = MaterialTheme.typography.titleLarge,
                                     fontWeight = FontWeight.Bold,
-                                    color = com.example.chitassist.core.ui.theme.Primary
+                                    color = Primary
                                 )
                                 Text(
                                     text = "Track bids and payable dues per cycle",
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = com.example.chitassist.core.ui.theme.Outline
+                                    color = Outline
                                 )
                             }
                             Surface(
-                                color = com.example.chitassist.core.ui.theme.TrackColor,
+                                color = TrackColor,
                                 shape = CircleShape
                             ) {
                                 Text(
@@ -261,7 +285,7 @@ fun ChitDetailsScreen(
                                     style = MaterialTheme.typography.labelSmall,
                                     modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
                                     fontWeight = FontWeight.ExtraBold,
-                                    color = com.example.chitassist.core.ui.theme.Secondary
+                                    color = Secondary
                                 )
                             }
                         }
@@ -284,10 +308,10 @@ fun ChitDetailsScreen(
                     PaymentItem(
                         payment = payment,
                         onStatusChange = { isPaid, bidAmount ->
-                            viewModel.onIntent(ChitDetailsContract.Intent.OnPaymentStatusChanged(payment, isPaid, bidAmount))
+                            onPaymentStatusChanged(payment, isPaid, bidAmount)
                         },
                         onWinnerChange = { isWinner ->
-                            viewModel.onIntent(ChitDetailsContract.Intent.OnWinnerStatusChanged(payment, isWinner))
+                            onWinnerStatusChanged(payment, isWinner)
                         },
                         isWinnerEnabled = payment.isWinner || !hasAnyWinner,
                         canChangeStatus = canChangeStatus
@@ -492,6 +516,76 @@ fun DetailItem(label: String, value: String, color: Color) {
             style = MaterialTheme.typography.bodyLarge,
             color = color,
             fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ChitDetailsScreenPreview() {
+    val sampleChit = Chit(
+        id = 1L,
+        userId = 1L,
+        name = "Kalyan Jewelers Chit",
+        totalValue = 100000.0,
+        monthlyContribution = 5000.0,
+        numberOfInstallments = 20,
+        startDate = System.currentTimeMillis() - 1000L * 60 * 60 * 24 * 60, // 60 days ago
+        paymentDueDay = 10,
+        completedInstallments = 2,
+        status = ChitStatus.ACTIVE,
+        organizer = "Kalyan Jewelers"
+    )
+
+    val samplePayments = listOf(
+        Payment(
+            id = 1L,
+            chitId = 1L,
+            chitName = "Kalyan Jewelers Chit",
+            installmentNumber = 1,
+            dueDate = System.currentTimeMillis() - 1000L * 60 * 60 * 24 * 30,
+            amount = 5000.0,
+            bidAmount = 2000.0,
+            dividend = 500.0,
+            status = PaymentStatus.PAID,
+            isWinner = false
+        ),
+        Payment(
+            id = 2L,
+            chitId = 1L,
+            chitName = "Kalyan Jewelers Chit",
+            installmentNumber = 2,
+            dueDate = System.currentTimeMillis() - 1000L * 60 * 60 * 24 * 0,
+            amount = 5000.0,
+            bidAmount = 3000.0,
+            dividend = 800.0,
+            status = PaymentStatus.PENDING,
+            isWinner = true
+        ),
+        Payment(
+            id = 3L,
+            chitId = 1L,
+            chitName = "Kalyan Jewelers Chit",
+            installmentNumber = 3,
+            dueDate = System.currentTimeMillis() + 1000L * 60 * 60 * 24 * 30,
+            amount = 5000.0,
+            bidAmount = 0.0,
+            dividend = 0.0,
+            status = PaymentStatus.PENDING,
+            isWinner = false
+        )
+    )
+
+    ChitAssistTheme {
+        ChitDetailsContent(
+            state = ChitDetailsContract.State(
+                chit = sampleChit,
+                payments = samplePayments,
+                isLoading = false
+            ),
+            onNavigateBack = {},
+            onPaymentStatusChanged = { _, _, _ -> },
+            onWinnerStatusChanged = { _, _ -> }
         )
     }
 }

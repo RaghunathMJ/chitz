@@ -27,7 +27,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.chitassist.core.ui.theme.ChitAssistTheme
+import com.example.chitassist.domain.model.User
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -48,6 +51,22 @@ fun ProfileScreen(
         }
     }
 
+    ProfileContent(
+        state = state,
+        onBackClick = onBackClick,
+        onLogoutClick = { viewModel.handleIntent(ProfileContract.Intent.Logout) },
+        onEditProfileClick = onEditProfileClick
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ProfileContent(
+    state: ProfileContract.State,
+    onBackClick: () -> Unit,
+    onLogoutClick: () -> Unit,
+    onEditProfileClick: () -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -58,7 +77,7 @@ fun ProfileScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = { viewModel.handleIntent(ProfileContract.Intent.Logout) }) {
+                    IconButton(onClick = onLogoutClick) {
                         Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Logout", tint = MaterialTheme.colorScheme.error)
                     }
                 },
@@ -315,5 +334,30 @@ fun SettingsItem(icon: ImageVector, label: String, subtitle: String) {
                 tint = MaterialTheme.colorScheme.onSurfaceVariant
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ProfileScreenPreview() {
+    val sampleUser = User(
+        id = 1L,
+        name = "John Doe",
+        mobileNumber = "9876543210",
+        email = "john.doe@example.com",
+        city = "Chennai",
+        dateOfBirth = "01-01-1990"
+    )
+
+    ChitAssistTheme {
+        ProfileContent(
+            state = ProfileContract.State(
+                user = sampleUser,
+                isLoading = false
+            ),
+            onBackClick = {},
+            onLogoutClick = {},
+            onEditProfileClick = {}
+        )
     }
 }

@@ -19,7 +19,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.chitassist.core.ui.theme.ChitAssistTheme
+import com.example.chitassist.core.ui.theme.*
 import com.example.chitassist.domain.model.DividendMode
 import java.text.NumberFormat
 import java.util.Locale
@@ -56,24 +56,24 @@ fun CalculatorContent(
                         Text(
                             "CHIT FUND",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.secondary,
+                            color = Primary,
                             fontWeight = FontWeight.Bold
                         )
                         Text(
                             "Chit Calculator",
                             style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary,
+                            color = Primary,
                             fontWeight = FontWeight.Bold
                         )
                     }
                 },
                 actions = {
                     IconButton(onClick = { /* Help */ }) {
-                        Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = "Help")
+                        Icon(Icons.AutoMirrored.Outlined.HelpOutline, contentDescription = "Help", tint = Primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                    containerColor = SurfaceContainerLowest
                 )
             )
         }
@@ -82,7 +82,7 @@ fun CalculatorContent(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .background(MaterialTheme.colorScheme.surface)
+                .background(Background)
                 .padding(horizontal = 16.dp, vertical = 16.dp)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -90,13 +90,13 @@ fun CalculatorContent(
             // Input Section
             Card(
                 modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(20.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerLowest),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
                 elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -108,11 +108,11 @@ fun CalculatorContent(
                                 val digits = it.filter { char -> char.isDigit() }
                                 onIntent(CalculatorContract.Intent.ChitAmountChanged(digits)) 
                             },
-                            label = { Text("Chit Value (₹)", fontSize = 13.sp) },
+                            label = { Text("Chit Value (₹)") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1.5f),
                             shape = RoundedCornerShape(12.dp),
-                            textStyle = MaterialTheme.typography.bodyLarge
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                         )
                         OutlinedTextField(
                             value = state.months,
@@ -120,11 +120,11 @@ fun CalculatorContent(
                                 val digits = it.filter { char -> char.isDigit() }
                                 onIntent(CalculatorContract.Intent.MonthsChanged(digits)) 
                             },
-                            label = { Text("Installments", fontSize = 13.sp) },
+                            label = { Text("Installments") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
-                            textStyle = MaterialTheme.typography.bodyLarge
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                         )
                     }
 
@@ -138,11 +138,11 @@ fun CalculatorContent(
                                 val digits = it.filter { char -> char.isDigit() }
                                 onIntent(CalculatorContract.Intent.InstallmentNumberChanged(digits)) 
                             },
-                            label = { Text("Current Inst.", fontSize = 13.sp) },
+                            label = { Text("Current Inst.") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1f),
                             shape = RoundedCornerShape(12.dp),
-                            textStyle = MaterialTheme.typography.bodyLarge
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                         )
                         OutlinedTextField(
                             value = state.commissionAmount,
@@ -150,30 +150,30 @@ fun CalculatorContent(
                                 val digits = it.filter { char -> char.isDigit() }
                                 onIntent(CalculatorContract.Intent.CommissionAmountChanged(digits)) 
                             },
-                            label = { Text("Comm. (₹)", fontSize = 13.sp) },
+                            label = { Text("Comm. (₹)") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(1.1f),
                             shape = RoundedCornerShape(12.dp),
-                            textStyle = MaterialTheme.typography.bodyLarge
+                            textStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                         )
                     }
 
                     SingleChoiceSegmentedButtonRow(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(40.dp)
+                            .height(44.dp)
                     ) {
                         SegmentedButton(
                             selected = state.bidType == CalculatorContract.BidType.TOTAL_BID,
                             onClick = { onIntent(CalculatorContract.Intent.BidTypeChanged(CalculatorContract.BidType.TOTAL_BID)) },
                             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                            label = { Text("Bid Amount", fontSize = 13.sp, fontWeight = FontWeight.Medium) }
+                            label = { Text("Bid Amount", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold) }
                         )
                         SegmentedButton(
                             selected = state.bidType == CalculatorContract.BidType.BID_DISCOUNT,
                             onClick = { onIntent(CalculatorContract.Intent.BidTypeChanged(CalculatorContract.BidType.BID_DISCOUNT)) },
                             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                            label = { Text("Discount", fontSize = 13.sp, fontWeight = FontWeight.Medium) }
+                            label = { Text("Discount", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold) }
                         )
                     }
 
@@ -188,37 +188,37 @@ fun CalculatorContent(
                                 if (state.bidType == CalculatorContract.BidType.TOTAL_BID) 
                                     "Enter Bid Amount (₹)" 
                                 else 
-                                    "Enter Discount Amount (₹)",
-                                fontSize = 13.sp
+                                    "Enter Discount Amount (₹)"
                             ) 
                         },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        textStyle = MaterialTheme.typography.bodyLarge
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(fontWeight = FontWeight.Bold)
                     )
 
                     Text(
-                        "Dividend Distribution",
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        "DIVIDEND DISTRIBUTION",
+                        style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.2.sp),
+                        color = OnSurfaceVariant,
+                        fontWeight = FontWeight.ExtraBold
                     )
                     SingleChoiceSegmentedButtonRow(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(40.dp)
+                            .height(44.dp)
                     ) {
                         SegmentedButton(
                             selected = state.dividendMode == DividendMode.EXCLUDING_WINNER,
                             onClick = { onIntent(CalculatorContract.Intent.DividendModeChanged(DividendMode.EXCLUDING_WINNER)) },
                             shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
-                            label = { Text("Excl. Winner", fontSize = 13.sp, fontWeight = FontWeight.Medium) }
+                            label = { Text("Excl. Winner", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold) }
                         )
                         SegmentedButton(
                             selected = state.dividendMode == DividendMode.INCLUDING_WINNER,
                             onClick = { onIntent(CalculatorContract.Intent.DividendModeChanged(DividendMode.INCLUDING_WINNER)) },
                             shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
-                            label = { Text("Incl. Winner", fontSize = 13.sp, fontWeight = FontWeight.Medium) }
+                            label = { Text("Incl. Winner", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold) }
                         )
                     }
                 }
@@ -235,39 +235,52 @@ fun CalculatorContent(
 fun CalculationBreakdownCard(state: CalculatorContract.State, currencyFormat: NumberFormat) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)
+        shape = RoundedCornerShape(24.dp),
+        colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, BorderColor)
     ) {
-        Column(modifier = Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(modifier = Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             Text(
-                "Breakdown",
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary
+                "CALCULATION BREAKDOWN",
+                style = MaterialTheme.typography.labelMedium.copy(letterSpacing = 1.5.sp),
+                fontWeight = FontWeight.ExtraBold,
+                color = Primary.copy(alpha = 0.7f)
             )
 
-            BreakdownRow("Chit Value", currencyFormat.format(state.chitAmount.replace(",", "").toDoubleOrNull() ?: 0.0))
-            BreakdownRow("Base Installment", currencyFormat.format(state.monthlyInstallment))
-            BreakdownRow("Commission", "- " + currencyFormat.format(state.totalCommission / (state.months.replace(",", "").toIntOrNull() ?: 1)))
-            BreakdownRow("Auction Dividend", "+ " + currencyFormat.format(state.dividend), isPositive = true)
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                BreakdownRow("Monthly Installment", currencyFormat.format(state.monthlyInstallment))
+                val monthlyCommission = state.totalCommission / (state.months.replace(",", "").toIntOrNull() ?: 1)
+                BreakdownRow("Foreman Commission", "- " + currencyFormat.format(monthlyCommission), isNegative = true)
+                BreakdownRow("Auction Dividend", "+ " + currencyFormat.format(state.dividend), isPositive = true)
+            }
             
-            HorizontalDivider(modifier = Modifier.padding(vertical = 4.dp), color = MaterialTheme.colorScheme.surfaceContainer)
+            HorizontalDivider(thickness = 1.dp, color = BorderColor)
             
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    "Installment",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold
-                )
+                Column {
+                    Text(
+                        "Monthly Payable",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.ExtraBold,
+                        color = Primary
+                    )
+                    Text(
+                        "Final installment amount",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = OnSurfaceVariant,
+                        fontWeight = FontWeight.Medium
+                    )
+                }
                 Text(
                     currencyFormat.format(state.actualPayment),
-                    style = MaterialTheme.typography.headlineMedium,
+                    style = MaterialTheme.typography.headlineLarge,
                     fontWeight = FontWeight.Black,
-                    color = MaterialTheme.colorScheme.secondary
+                    color = Secondary
                 )
             }
         }
@@ -275,7 +288,7 @@ fun CalculationBreakdownCard(state: CalculatorContract.State, currencyFormat: Nu
 }
 
 @Composable
-fun BreakdownRow(label: String, value: String, isPositive: Boolean = false) {
+fun BreakdownRow(label: String, value: String, isPositive: Boolean = false, isNegative: Boolean = false) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -283,14 +296,19 @@ fun BreakdownRow(label: String, value: String, isPositive: Boolean = false) {
     ) {
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            style = MaterialTheme.typography.bodyMedium,
+            color = OnSurfaceVariant,
+            fontWeight = FontWeight.Medium
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyLarge,
-            fontWeight = FontWeight.Medium,
-            color = if (isPositive) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.onSurface
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = when {
+                isPositive -> Success
+                isNegative -> Error
+                else -> TextPrimary
+            }
         )
     }
 }

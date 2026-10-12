@@ -17,6 +17,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.chitassist.domain.model.DividendMode
 import kotlinx.coroutines.flow.collectLatest
@@ -32,18 +33,12 @@ fun AddChitScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val snackbarHostState = remember { SnackbarHostState() }
-    val scrollState = rememberScrollState()
 
     LaunchedEffect(chitId) {
         if (chitId != null) {
             viewModel.onIntent(AddChitContract.Intent.LoadChit(chitId))
         }
     }
-
-    var showDatePicker by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = state.startDate
-    )
 
     LaunchedEffect(Unit) {
         viewModel.effect.collectLatest { effect ->
@@ -56,13 +51,37 @@ fun AddChitScreen(
         }
     }
 
+    AddChitContent(
+        state = state,
+        chitId = chitId,
+        onNavigateBack = onNavigateBack,
+        onIntent = viewModel::onIntent,
+        snackbarHostState = snackbarHostState
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddChitContent(
+    state: AddChitContract.State,
+    chitId: Long? = null,
+    onNavigateBack: () -> Unit,
+    onIntent: (AddChitContract.Intent) -> Unit,
+    snackbarHostState: SnackbarHostState = remember { SnackbarHostState() }
+) {
+    val scrollState = rememberScrollState()
+    var showDatePicker by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = state.startDate
+    )
+
     if (showDatePicker) {
         DatePickerDialog(
             onDismissRequest = { showDatePicker = false },
             confirmButton = {
                 TextButton(onClick = {
                     datePickerState.selectedDateMillis?.let {
-                        viewModel.onIntent(AddChitContract.Intent.OnStartDateChanged(it))
+                        onIntent(AddChitContract.Intent.OnStartDateChanged(it))
                     }
                     showDatePicker = false
                 }) {
@@ -139,7 +158,7 @@ fun AddChitScreen(
 
                     OutlinedTextField(
                         value = state.name,
-                        onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnNameChanged(it)) },
+                        onValueChange = { onIntent(AddChitContract.Intent.OnNameChanged(it)) },
                         label = { Text("Chit Name", fontSize = 12.sp) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -148,7 +167,7 @@ fun AddChitScreen(
 
                     OutlinedTextField(
                         value = state.organizer,
-                        onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnOrganizerChanged(it)) },
+                        onValueChange = { onIntent(AddChitContract.Intent.OnOrganizerChanged(it)) },
                         label = { Text("Organizer (Optional)", fontSize = 12.sp) },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
@@ -161,7 +180,7 @@ fun AddChitScreen(
                     ) {
                         OutlinedTextField(
                             value = state.totalValue,
-                            onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnTotalValueChanged(it)) },
+                            onValueChange = { onIntent(AddChitContract.Intent.OnTotalValueChanged(it)) },
                             label = { Text("Total Value (₹)", fontSize = 12.sp) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier.weight(1f),
@@ -171,7 +190,7 @@ fun AddChitScreen(
 
                         OutlinedTextField(
                             value = state.numberOfInstallments,
-                            onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnInstallmentsChanged(it)) },
+                            onValueChange = { onIntent(AddChitContract.Intent.OnInstallmentsChanged(it)) },
                             label = { Text("Installments", fontSize = 12.sp) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             modifier = Modifier.weight(0.8f),
@@ -205,7 +224,7 @@ fun AddChitScreen(
                     ) {
                         OutlinedTextField(
                             value = state.monthlyContribution,
-                            onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnMonthlyContributionChanged(it)) },
+                            onValueChange = { onIntent(AddChitContract.Intent.OnMonthlyContributionChanged(it)) },
                             label = { Text("Inst. Amt (₹)", fontSize = 12.sp) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier.weight(1f),
@@ -215,7 +234,7 @@ fun AddChitScreen(
 
                         OutlinedTextField(
                             value = state.commissionAmount,
-                            onValueChange = { viewModel.onIntent(AddChitContract.Intent.OnCommissionAmountChanged(it)) },
+                            onValueChange = { onIntent(AddChitContract.Intent.OnCommissionAmountChanged(it)) },
                             label = { Text("Comm. (₹)", fontSize = 12.sp) },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                             modifier = Modifier.weight(1f),
@@ -280,7 +299,7 @@ fun AddChitScreen(
                                     DropdownMenuItem(
                                         text = { Text(label) },
                                         onClick = {
-                                            viewModel.onIntent(AddChitContract.Intent.OnIntervalChanged(interval))
+                                            onIntent(AddChitContract.Intent.OnIntervalChanged(interval))
                                             expanded = false
                                         }
                                     )
@@ -302,13 +321,13 @@ fun AddChitScreen(
                         ) {
                             FilterChip(
                                 selected = state.dividendMode == DividendMode.EXCLUDING_WINNER,
-                                onClick = { viewModel.onIntent(AddChitContract.Intent.OnDividendModeChanged(DividendMode.EXCLUDING_WINNER)) },
+                                onClick = { onIntent(AddChitContract.Intent.OnDividendModeChanged(DividendMode.EXCLUDING_WINNER)) },
                                 label = { Text("Excl. Winner", fontSize = 12.sp) },
                                 shape = RoundedCornerShape(8.dp)
                             )
                             FilterChip(
                                 selected = state.dividendMode == DividendMode.INCLUDING_WINNER,
-                                onClick = { viewModel.onIntent(AddChitContract.Intent.OnDividendModeChanged(DividendMode.INCLUDING_WINNER)) },
+                                onClick = { onIntent(AddChitContract.Intent.OnDividendModeChanged(DividendMode.INCLUDING_WINNER)) },
                                 label = { Text("Incl. Winner", fontSize = 12.sp) },
                                 shape = RoundedCornerShape(8.dp)
                             )
@@ -318,7 +337,7 @@ fun AddChitScreen(
             }
 
             Button(
-                onClick = { viewModel.onIntent(AddChitContract.Intent.OnSaveClicked) },
+                onClick = { onIntent(AddChitContract.Intent.OnSaveClicked) },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(56.dp),
@@ -337,5 +356,25 @@ fun AddChitScreen(
             
             Spacer(modifier = Modifier.height(24.dp))
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun AddChitScreenPreview() {
+    val sampleState = AddChitContract.State(
+        name = "Kalyan Jewelers Chit",
+        totalValue = "100000",
+        monthlyContribution = "5000",
+        numberOfInstallments = "20",
+        organizer = "Kalyan Jewelers"
+    )
+
+    com.example.chitassist.core.ui.theme.ChitAssistTheme {
+        AddChitContent(
+            state = sampleState,
+            onNavigateBack = {},
+            onIntent = {}
+        )
     }
 }
