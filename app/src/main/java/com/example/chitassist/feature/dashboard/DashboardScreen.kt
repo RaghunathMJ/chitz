@@ -30,6 +30,8 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material.icons.filled.Wallet
+import androidx.compose.material.icons.materialIcon
+import androidx.compose.material.icons.materialPath
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
@@ -78,6 +80,7 @@ import com.example.chitassist.domain.model.Payment
 import com.example.chitassist.domain.model.User
 import kotlinx.coroutines.flow.collectLatest
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -582,7 +585,7 @@ fun ChitItem(
 
             Spacer(modifier = Modifier.height(20.dp))
 
-            // Bottom row with Start Date details and Status
+            // Bottom row with Timeline and Status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -591,16 +594,25 @@ fun ChitItem(
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     Icon(
                         Icons.Default.CalendarMonth,
-                        contentDescription = "Start Date",
+                        contentDescription = "Timeline",
                         tint = Color(0xFF74777F),
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
-                    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
+                    val timeline = remember(chit.startDate, chit.numberOfInstallments, chit.intervalMonths) {
+                        val sdf = SimpleDateFormat("MMM yy", Locale.getDefault())
+                        val calendar = Calendar.getInstance().apply {
+                            timeInMillis = chit.startDate
+                        }
+                        val start = sdf.format(calendar.time)
+                        calendar.add(Calendar.MONTH, (chit.numberOfInstallments - 1) * chit.intervalMonths)
+                        val end = sdf.format(calendar.time)
+                        "$start - $end"
+                    }
                     Text(
                         text = buildAnnotatedString {
                             pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold, color = Color(0xFF1D2129)))
-                            append(dateFormat.format(Date(chit.startDate)))
+                            append(timeline)
                             pop()
                             pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold, color = Secondary))
                             append(" • ${chit.dividendMode.name.replace("_", " ").uppercase()}")

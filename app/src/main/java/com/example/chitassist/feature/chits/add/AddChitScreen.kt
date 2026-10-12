@@ -246,7 +246,7 @@ private fun AddChitContent(
                     OutlinedTextField(
                         value = SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(state.startDate)),
                         onValueChange = {},
-                        label = { Text("Start Date", fontSize = 12.sp) },
+                        label = { Text("Timeline Start", fontSize = 12.sp) },
                         readOnly = true,
                         trailingIcon = {
                             IconButton(onClick = { showDatePicker = true }) {

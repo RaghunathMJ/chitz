@@ -2,7 +2,6 @@ package com.example.chitassist.feature.chits.details
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -11,9 +10,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.Description
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -38,6 +35,9 @@ import com.example.chitassist.domain.model.ChitStatus
 import com.example.chitassist.domain.model.Payment
 import com.example.chitassist.domain.model.PaymentStatus
 import kotlinx.coroutines.flow.collectLatest
+import androidx.compose.ui.text.input.VisualTransformation
+import java.text.DecimalFormat
+import java.text.NumberFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -116,7 +116,7 @@ private fun ChitDetailsContent(
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = Primary)
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back", tint = Primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -216,17 +216,26 @@ private fun ChitDetailsContent(
                                 Spacer(modifier = Modifier.height(16.dp))
                                 
                                 Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                    modifier = Modifier.fillMaxWidth()
                                 ) {
-                                    DetailItem("START DATE", SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(chit.startDate)), Color.White)
-                                    DetailItem("DURATION", "${chit.numberOfInstallments} Mos", Color.White)
+                                    val timeline = remember(chit.startDate, chit.numberOfInstallments, chit.intervalMonths) {
+                                        val sdf = SimpleDateFormat("MMM yy", Locale.getDefault())
+                                        val calendar = Calendar.getInstance().apply {
+                                            timeInMillis = chit.startDate
+                                        }
+                                        val start = sdf.format(calendar.time)
+                                        calendar.add(Calendar.MONTH, (chit.numberOfInstallments - 1) * chit.intervalMonths)
+                                        val end = sdf.format(calendar.time)
+                                        "$start - $end"
+                                    }
+                                    DetailItem("TIMELINE", timeline, Color.White, Modifier.weight(1.4f))
+                                    DetailItem("TOTAL", "${chit.numberOfInstallments}", Color.White, Modifier.weight(0.7f), alignment = Alignment.CenterHorizontally)
                                     val currencyFormat = remember {
                                         java.text.NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
                                             maximumFractionDigits = 0
                                         }
                                     }
-                                    DetailItem("MONTHLY DUE", currencyFormat.format(chit.monthlyContribution), Color.White)
+                                    DetailItem("MONTHLY DUE", currencyFormat.format(chit.monthlyContribution), Color.White, Modifier.weight(1.2f), alignment = Alignment.End)
                                 }
                             }
                         }
@@ -331,7 +340,11 @@ fun PaymentItem(
     canChangeStatus: Boolean
 ) {
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
-    var bidAmountText by remember(payment.id) { mutableStateOf(if (payment.bidAmount > 0) payment.bidAmount.toString() else "") }
+    val decimalFormat = remember { DecimalFormat("#,##,###") }
+    var bidAmountText by remember(payment.id) { 
+        val initialText = if (payment.bidAmount > 0) decimalFormat.format(payment.bidAmount) else ""
+        mutableStateOf(initialText) 
+    }
     val currencyFormat = remember { 
         java.text.NumberFormat.getCurrencyInstance(java.util.Locale("en", "IN")).apply {
             maximumFractionDigits = 0
@@ -452,7 +465,18 @@ fun PaymentItem(
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = bidAmountText,
-                        onValueChange = { bidAmountText = it },
+                        onValueChange = { newValue ->
+                            val cleanString = newValue.replace("[^\\d]".toRegex(), "")
+                            bidAmountText = if (cleanString.isNotEmpty()) {
+                                try {
+                                    decimalFormat.format(cleanString.toLong())
+                                } catch (e: Exception) {
+                                    cleanString
+                                }
+                            } else {
+                                ""
+                            }
+                        },
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(64.dp),
@@ -501,21 +525,31 @@ fun PaymentItem(
 }
 
 @Composable
-fun DetailItem(label: String, value: String, color: Color) {
-    Column {
+fun DetailItem(
+    label: String,
+    value: String,
+    color: Color,
+    modifier: Modifier = Modifier,
+    alignment: Alignment.Horizontal = Alignment.Start
+) {
+    Column(modifier = modifier, horizontalAlignment = alignment) {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
             color = color.copy(alpha = 0.7f),
             fontWeight = FontWeight.ExtraBold,
-            fontSize = 11.sp,
-            letterSpacing = 0.5.sp
+            fontSize = 10.sp,
+            letterSpacing = 0.5.sp,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
         Text(
             text = value,
             style = MaterialTheme.typography.bodyLarge,
             color = color,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis
         )
     }
 }
