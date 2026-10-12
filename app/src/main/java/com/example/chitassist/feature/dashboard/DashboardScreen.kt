@@ -88,6 +88,7 @@ fun DashboardScreen(
     onNavigateToEditChit: (Long) -> Unit,
     onNavigateToChitDetails: (Long) -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToChitList: () -> Unit,
     onLogout: () -> Unit,
     viewModel: DashboardViewModel = hiltViewModel()
 ) {
@@ -109,6 +110,7 @@ fun DashboardScreen(
         onNavigateToAddChit = onNavigateToAddChit,
         onNavigateToChitDetails = onNavigateToChitDetails,
         onNavigateToProfile = onNavigateToProfile,
+        onViewAllChits = onNavigateToChitList,
         onEditChit = { viewModel.onIntent(DashboardContract.Intent.OnEditChitClicked(it)) },
         onDeleteChit = { viewModel.onIntent(DashboardContract.Intent.OnDeleteChitClicked(it)) }
     )
@@ -121,6 +123,7 @@ private fun DashboardContent(
     onNavigateToAddChit: () -> Unit,
     onNavigateToChitDetails: (Long) -> Unit,
     onNavigateToProfile: () -> Unit,
+    onViewAllChits: () -> Unit,
     onEditChit: (Chit) -> Unit,
     onDeleteChit: (Chit) -> Unit
 ) {
@@ -163,7 +166,7 @@ private fun DashboardContent(
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = SurfaceContainerLowest
+                    containerColor = Background
                 )
             )
         },
@@ -188,12 +191,12 @@ private fun DashboardContent(
                     .fillMaxSize()
                     .padding(paddingValues)
                     .background(Background),
-                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 100.dp),
-                verticalArrangement = Arrangement.spacedBy(16.dp)
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 100.dp)
             ) {
                 item {
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(12.dp))
                     GreetingHeader(userName = state.user?.name ?: "User")
+                    Spacer(modifier = Modifier.height(24.dp))
                 }
 
                 item {
@@ -201,6 +204,7 @@ private fun DashboardContent(
                         totalValue = state.chits.sumOf { it.totalValue },
                         chitCount = state.chits.size
                     )
+                    Spacer(modifier = Modifier.height(32.dp))
                 }
 
                 if (state.upcomingPayments.isNotEmpty()) {
@@ -210,18 +214,22 @@ private fun DashboardContent(
                             badgeCount = state.upcomingPayments.size,
                             subtitle = "Scheduled cycles"
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                     itemsIndexed(state.upcomingPayments) { index, payment ->
                         UpcomingPaymentItem(payment = payment, isFirst = index == 0)
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
+                    item { Spacer(modifier = Modifier.height(16.dp)) }
                 }
 
                 item {
                     SectionHeader(
                         title = "Your Chits",
                         badgeCount = state.chits.size,
-                        onViewAllClick = { /* View All */ }
+                        onViewAllClick = onViewAllChits
                     )
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
 
                 if (state.chits.isEmpty()) {
@@ -236,6 +244,7 @@ private fun DashboardContent(
                             onEdit = { onEditChit(chit) },
                             onDelete = { onDeleteChit(chit) }
                         )
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
             }
@@ -288,10 +297,12 @@ fun PortfolioHeroCard(
     totalValue: Double,
     chitCount: Int
 ) {
-    val currencyFormat = remember { java.text.NumberFormat.getCurrencyInstance(Locale("en", "IN")) }
+    val currencyFormat = remember { 
+        java.text.NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
+            maximumFractionDigits = 0
+        }
+    }
     val formattedValue = currencyFormat.format(totalValue)
-    val mainAmount = formattedValue.substringBefore(".")
-    val decimalPart = if (formattedValue.contains(".")) "." + formattedValue.substringAfter(".") else ".00"
 
     Card(
         modifier = Modifier.fillMaxWidth(),
@@ -322,16 +333,10 @@ fun PortfolioHeroCard(
                 Spacer(modifier = Modifier.height(12.dp))
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
-                        mainAmount,
+                        formattedValue,
                         style = MaterialTheme.typography.headlineLarge.copy(fontSize = 36.sp),
                         fontWeight = FontWeight.Black,
                         color = OnPrimary
-                    )
-                    Text(
-                        decimalPart,
-                        style = MaterialTheme.typography.titleLarge,
-                        color = OnPrimary.copy(alpha = 0.6f),
-                        modifier = Modifier.padding(bottom = 6.dp, start = 2.dp)
                     )
                 }
                 Spacer(modifier = Modifier.height(12.dp))
@@ -466,7 +471,11 @@ fun ChitItem(
     onDelete: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
-    val currencyFormat = remember { java.text.NumberFormat.getCurrencyInstance(Locale("en", "IN")) }
+    val currencyFormat = remember { 
+        java.text.NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
+            maximumFractionDigits = 0
+        }
+    }
     val statusColor = when (chit.status.name) {
         "ACTIVE" -> Secondary
         "COMPLETED" -> Success
@@ -483,7 +492,7 @@ fun ChitItem(
         shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(containerColor = SurfaceContainerLowest),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
-        border = androidx.compose.foundation.BorderStroke(1.dp, BorderColor)
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFF1F3F4))
     ) {
         Column(
             modifier = Modifier
@@ -499,9 +508,11 @@ fun ChitItem(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = chit.name,
-                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
+                        style = MaterialTheme.typography.titleLarge.copy(
+                            fontSize = 20.sp,
+                            color = Color(0xFF00236F)
+                        ),
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -518,12 +529,12 @@ fun ChitItem(
                         Text(
                             text = currencyFormat.format(chit.totalValue),
                             style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp),
-                            color = TextSecondary,
+                            color = Color(0xFF1D2129),
                             fontWeight = FontWeight.Black
                         )
                         Box(modifier = Modifier.padding(start = 2.dp)) {
                             IconButton(onClick = { showMenu = true }, modifier = Modifier.size(24.dp)) {
-                                Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Outline)
+                                Icon(Icons.Default.MoreVert, contentDescription = "More", tint = Color(0xFF74777F))
                             }
                             DropdownMenu(
                                 expanded = showMenu,
@@ -551,12 +562,12 @@ fun ChitItem(
                     Text(
                         text = "Total Value",
                         style = MaterialTheme.typography.labelSmall,
-                        color = OnSurfaceVariant
+                        color = Color(0xFF44474E)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
             // Progress Indicator
             LinearProgressIndicator(
@@ -565,13 +576,13 @@ fun ChitItem(
                     .fillMaxWidth()
                     .height(8.dp)
                     .clip(CircleShape),
-                color = Secondary,
-                trackColor = TrackColor
+                color = statusColor,
+                trackColor = Color(0xFFE8EAF6)
             )
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(20.dp))
 
-            // Bottom row with Auction Day details and Status
+            // Bottom row with Start Date details and Status
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -580,23 +591,23 @@ fun ChitItem(
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.weight(1f)) {
                     Icon(
                         Icons.Default.CalendarMonth,
-                        contentDescription = "Auction Day",
-                        tint = Outline,
+                        contentDescription = "Start Date",
+                        tint = Color(0xFF74777F),
                         modifier = Modifier.size(18.dp)
                     )
                     Spacer(modifier = Modifier.width(6.dp))
+                    val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
                     Text(
                         text = buildAnnotatedString {
-                            append("Auction Day: ")
-                            pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold, color = TextSecondary))
-                            append("${chit.paymentDueDay}th of month ")
+                            pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold, color = Color(0xFF1D2129)))
+                            append(dateFormat.format(Date(chit.startDate)))
                             pop()
                             pushStyle(androidx.compose.ui.text.SpanStyle(fontWeight = FontWeight.Bold, color = Secondary))
-                            append("• ${chit.dividendMode.name.replace("_", " ").uppercase()}")
+                            append(" • ${chit.dividendMode.name.replace("_", " ").uppercase()}")
                             pop()
                         },
                         style = MaterialTheme.typography.bodySmall,
-                        color = OnSurfaceVariant,
+                        color = Color(0xFF44474E),
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -624,7 +635,11 @@ fun ChitItem(
 @Composable
 fun UpcomingPaymentItem(payment: Payment, isFirst: Boolean = false) {
     val dateFormat = SimpleDateFormat("dd MMM yyyy", Locale.getDefault())
-    val currencyFormat = remember { java.text.NumberFormat.getCurrencyInstance(Locale("en", "IN")) }
+    val currencyFormat = remember { 
+        java.text.NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
+            maximumFractionDigits = 0
+        }
+    }
     
     val daysLeft = remember(payment.dueDate) {
         val diff = payment.dueDate - System.currentTimeMillis()
@@ -786,6 +801,7 @@ fun DashboardScreenPreview() {
             onNavigateToAddChit = {},
             onNavigateToChitDetails = {},
             onNavigateToProfile = {},
+            onViewAllChits = {},
             onEditChit = {},
             onDeleteChit = {}
         )

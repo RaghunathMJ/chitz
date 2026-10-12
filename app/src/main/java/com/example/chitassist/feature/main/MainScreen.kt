@@ -101,7 +101,24 @@ fun MainScreen(
                     onNavigateToChitDetails = { chitId -> 
                         rootNavController.navigate(Screen.ChitDetails.createRoute(chitId)) 
                     },
-                    onNavigateToProfile = { navController.navigate(Screen.Profile.route) },
+                    onNavigateToProfile = { 
+                        navController.navigate(Screen.Profile.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
+                    onNavigateToChitList = { 
+                        navController.navigate(Screen.ChitList.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    },
                     onLogout = onLogout
                 )
             }

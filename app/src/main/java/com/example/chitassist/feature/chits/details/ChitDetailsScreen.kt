@@ -1,6 +1,9 @@
 package com.example.chitassist.feature.chits.details
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -9,18 +12,27 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.outlined.AccountBalanceWallet
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.BaselineShift
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.example.chitassist.domain.model.ChitStatus
+import com.example.chitassist.domain.model.DividendMode
 import com.example.chitassist.domain.model.Payment
 import com.example.chitassist.domain.model.PaymentStatus
 import kotlinx.coroutines.flow.collectLatest
@@ -53,122 +65,207 @@ fun ChitDetailsScreen(
                 title = {
                     Column {
                         Text(
-                            "CHIT FUND",
+                            "CHIT SCHEME",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.secondary,
+                            color = com.example.chitassist.core.ui.theme.Secondary,
                             fontWeight = FontWeight.Bold
                         )
-                        Text(
-                            state.chit?.name ?: "Chit Details",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
-                        )
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                state.chit?.name ?: "Chit Details",
+                                style = MaterialTheme.typography.titleLarge,
+                                color = com.example.chitassist.core.ui.theme.TextSecondary,
+                                fontWeight = FontWeight.Bold,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            if (state.chit?.status == ChitStatus.ACTIVE) {
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(8.dp)
+                                        .background(com.example.chitassist.core.ui.theme.Success, CircleShape)
+                                )
+                            }
+                        }
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Back", tint = com.example.chitassist.core.ui.theme.Primary)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)
+                    containerColor = com.example.chitassist.core.ui.theme.Background
                 )
             )
         }
     ) { paddingValues ->
         if (state.isLoading) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(color = com.example.chitassist.core.ui.theme.Primary)
             }
         } else {
             LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(paddingValues)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
+                    .background(com.example.chitassist.core.ui.theme.Background),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = 32.dp)
             ) {
                 state.chit?.let { chit ->
                     item {
-                        Spacer(modifier = Modifier.height(4.dp))
+                        Spacer(modifier = Modifier.height(12.dp))
 
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            shape = RoundedCornerShape(24.dp),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary)
+                            shape = RoundedCornerShape(32.dp),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
                         ) {
                             Column(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(16.dp)
+                                    .background(
+                                        Brush.verticalGradient(
+                                            colors = listOf(
+                                                com.example.chitassist.core.ui.theme.PrimaryContainer,
+                                                com.example.chitassist.core.ui.theme.Primary
+                                            )
+                                        )
+                                    )
+                                    .padding(24.dp)
                             ) {
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
+                                    verticalAlignment = Alignment.Top
                                 ) {
                                     Column {
                                         Text(
-                                            text = "TOTAL VALUE",
-                                            style = MaterialTheme.typography.labelMedium,
-                                            color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.7f),
+                                            text = "TOTAL SCHEME VALUE",
+                                            style = MaterialTheme.typography.labelSmall.copy(letterSpacing = 1.sp),
+                                            color = Color.White.copy(alpha = 0.7f),
                                             fontWeight = FontWeight.Bold
                                         )
+                                        val currencyFormat = remember { 
+                                            java.text.NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
+                                                maximumFractionDigits = 0
+                                            }
+                                        }
                                         Text(
-                                            text = "₹${chit.totalValue}",
-                                            style = MaterialTheme.typography.headlineMedium,
-                                            color = MaterialTheme.colorScheme.onPrimary,
-                                            fontWeight = FontWeight.Bold
+                                            text = buildAnnotatedString {
+                                                withStyle(SpanStyle(
+                                                    fontSize = 22.sp,
+                                                    fontWeight = FontWeight.Medium,
+                                                    baselineShift = BaselineShift(0.2f)
+                                                )) {
+                                                    append("₹")
+                                                }
+                                                append(currencyFormat.format(chit.totalValue).replace("₹", ""))
+                                            },
+                                            style = MaterialTheme.typography.headlineLarge.copy(fontSize = 36.sp),
+                                            color = Color.White,
+                                            fontWeight = FontWeight.Black
                                         )
                                     }
                                     
+                                    val statusColor = if (chit.status == ChitStatus.COMPLETED) com.example.chitassist.core.ui.theme.Success else com.example.chitassist.core.ui.theme.Secondary
                                     Surface(
-                                        color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.2f),
-                                        shape = RoundedCornerShape(8.dp)
+                                        color = statusColor.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(12.dp),
+                                        border = BorderStroke(0.5.dp, statusColor.copy(alpha = 0.5f))
                                     ) {
                                         Text(
-                                            text = chit.status.name,
+                                            text = if (chit.status == ChitStatus.COMPLETED) "COMPLETED" else "ACTIVE",
                                             style = MaterialTheme.typography.labelSmall,
-                                            color = MaterialTheme.colorScheme.onPrimary,
-                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                                            color = statusColor,
+                                            modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
                                             fontWeight = FontWeight.Bold
                                         )
                                     }
                                 }
 
-                                Spacer(modifier = Modifier.height(12.dp))
+                                Spacer(modifier = Modifier.height(28.dp))
+                                
+                                HorizontalDivider(color = Color.White.copy(alpha = 0.15f))
+                                
+                                Spacer(modifier = Modifier.height(16.dp))
                                 
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     horizontalArrangement = Arrangement.SpaceBetween
                                 ) {
-                                    DetailItem("Installments", chit.numberOfInstallments.toString(), MaterialTheme.colorScheme.onPrimary)
-                                    DetailItem("Monthly Amt", "₹${chit.monthlyContribution}", MaterialTheme.colorScheme.onPrimary)
-                                    DetailItem("Dividend", chit.dividendMode.name.take(4), MaterialTheme.colorScheme.onPrimary)
+                                    DetailItem("START DATE", SimpleDateFormat("dd MMM yyyy", Locale.getDefault()).format(Date(chit.startDate)), Color.White)
+                                    DetailItem("DURATION", "${chit.numberOfInstallments} Mos", Color.White)
+                                    val currencyFormat = remember { 
+                                        java.text.NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
+                                            maximumFractionDigits = 0
+                                        }
+                                    }
+                                    DetailItem("MONTHLY DUE", currencyFormat.format(chit.monthlyContribution), Color.White)
                                 }
                             }
                         }
                         
                         if (chit.organizer != null) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text(
-                                text = "Organizer: ${chit.organizer}",
-                                style = MaterialTheme.typography.labelSmall,
-                                color = MaterialTheme.colorScheme.outline,
-                                modifier = Modifier.padding(horizontal = 4.dp)
-                            )
+                            Spacer(modifier = Modifier.height(20.dp))
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            ) {
+                                Icon(
+                                    Icons.Outlined.AccountBalanceWallet, 
+                                    contentDescription = null, 
+                                    modifier = Modifier.size(16.dp),
+                                    tint = com.example.chitassist.core.ui.theme.Outline
+                                )
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Text(
+                                    text = buildAnnotatedString {
+                                        append("Organizer: ")
+                                        withStyle(SpanStyle(fontWeight = FontWeight.Bold, color = com.example.chitassist.core.ui.theme.TextSecondary)) {
+                                            append(chit.organizer)
+                                        }
+                                    },
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = com.example.chitassist.core.ui.theme.Outline
+                                )
+                            }
                         }
 
-                        Spacer(modifier = Modifier.height(12.dp))
-                        Text(
-                            text = "Payment Schedule",
-                            style = MaterialTheme.typography.titleMedium,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.primary
-                        )
+                        Spacer(modifier = Modifier.height(32.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Installment Schedule",
+                                    style = MaterialTheme.typography.titleLarge,
+                                    fontWeight = FontWeight.Bold,
+                                    color = com.example.chitassist.core.ui.theme.Primary
+                                )
+                                Text(
+                                    text = "Track bids and payable dues per cycle",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = com.example.chitassist.core.ui.theme.Outline
+                                )
+                            }
+                            Surface(
+                                color = com.example.chitassist.core.ui.theme.TrackColor,
+                                shape = CircleShape
+                            ) {
+                                Text(
+                                    text = "${chit.numberOfInstallments}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                                    fontWeight = FontWeight.ExtraBold,
+                                    color = com.example.chitassist.core.ui.theme.Secondary
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(16.dp))
                     }
                 }
 
@@ -211,134 +308,167 @@ fun PaymentItem(
 ) {
     val dateFormat = remember { SimpleDateFormat("dd MMM yyyy", Locale.getDefault()) }
     var bidAmountText by remember(payment.id) { mutableStateOf(if (payment.bidAmount > 0) payment.bidAmount.toString() else "") }
-    val currencyFormat = remember { java.text.NumberFormat.getCurrencyInstance(java.util.Locale("en", "IN")) }
+    val currencyFormat = remember { 
+        java.text.NumberFormat.getCurrencyInstance(java.util.Locale("en", "IN")).apply {
+            maximumFractionDigits = 0
+        }
+    }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(20.dp),
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        shape = RoundedCornerShape(28.dp),
         colors = CardDefaults.cardColors(
-            containerColor = if (payment.status == PaymentStatus.PAID) 
-                MaterialTheme.colorScheme.surfaceContainerHigh
-            else 
-                MaterialTheme.colorScheme.surfaceContainerLowest
+            containerColor = Color.White
         ),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        border = BorderStroke(1.dp, com.example.chitassist.core.ui.theme.BorderColor)
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(modifier = Modifier.padding(16.dp)) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(modifier = Modifier.weight(1f)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(6.dp)
+                            .background(com.example.chitassist.core.ui.theme.Secondary, CircleShape)
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = "INSTALLMENT #${payment.installmentNumber}",
                         style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.secondary,
+                        color = com.example.chitassist.core.ui.theme.Secondary,
                         fontWeight = FontWeight.Bold
-                    )
-                    Text(
-                        text = "Due: ${dateFormat.format(Date(payment.dueDate))}",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.outline
                     )
                 }
                 
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(
-                        text = if (payment.status == PaymentStatus.PAID) "PAID" else "PENDING",
-                        style = MaterialTheme.typography.labelSmall,
-                        fontWeight = FontWeight.Bold,
+                    Surface(
                         color = if (payment.status == PaymentStatus.PAID) 
-                            androidx.compose.ui.graphics.Color(0xFF4CAF50)
+                            Color(0xFFE8F5E9)
                         else 
-                            MaterialTheme.colorScheme.outline
-                    )
-                    Spacer(modifier = Modifier.width(4.dp))
+                            Color(0xFFFFF3E0),
+                        shape = RoundedCornerShape(6.dp)
+                    ) {
+                        Text(
+                            text = if (payment.status == PaymentStatus.PAID) "PAID" else "PENDING",
+                            style = MaterialTheme.typography.labelSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = if (payment.status == PaymentStatus.PAID) 
+                                Color(0xFF2E7D32)
+                            else 
+                                Color(0xFFEF6C00),
+                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                     Checkbox(
                         checked = payment.status == PaymentStatus.PAID,
                         onCheckedChange = { onStatusChange(it, bidAmountText) },
                         enabled = canChangeStatus,
-                        modifier = Modifier.size(32.dp)
+                        modifier = Modifier.size(24.dp)
                     )
                 }
             }
 
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Surface(
-                    color = if (payment.isWinner) MaterialTheme.colorScheme.secondary.copy(alpha = 0.1f) else androidx.compose.ui.graphics.Color.Transparent,
-                    shape = RoundedCornerShape(8.dp),
-                    onClick = { if (isWinnerEnabled) onWinnerChange(!payment.isWinner) },
-                    enabled = isWinnerEnabled
-                ) {
-                    Row(
-                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = payment.isWinner,
-                            onClick = null,
-                            enabled = isWinnerEnabled,
-                            modifier = Modifier.size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.width(6.dp))
-                        Text(
-                            text = "Won this auction",
-                            style = MaterialTheme.typography.labelSmall,
-                            fontWeight = if (payment.isWinner) FontWeight.Bold else FontWeight.Normal,
-                            color = if (isWinnerEnabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.outline
-                        )
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-                verticalAlignment = Alignment.Bottom
-            ) {
-                OutlinedTextField(
-                    value = bidAmountText,
-                    onValueChange = { bidAmountText = it },
-                    label = { Text("Bid Amt (₹)", fontSize = 10.sp) },
-                    modifier = Modifier.weight(1.2f),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    singleLine = true,
-                    enabled = payment.status != PaymentStatus.PAID && canChangeStatus,
-                    shape = RoundedCornerShape(12.dp),
-                    textStyle = MaterialTheme.typography.bodySmall
+                Text(
+                    text = "Due Date: ${dateFormat.format(Date(payment.dueDate))}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Gray,
+                    fontWeight = FontWeight.Medium
                 )
                 
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.clickable(enabled = isWinnerEnabled) { onWinnerChange(!payment.isWinner) }
+                ) {
+                    RadioButton(
+                        selected = payment.isWinner,
+                        onClick = null,
+                        enabled = isWinnerEnabled,
+                        modifier = Modifier.size(20.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = "Won this auction",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isWinnerEnabled) Color.Black else Color.Gray,
+                        fontWeight = if (payment.isWinner) FontWeight.Bold else FontWeight.Normal
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.Bottom
+            ) {
+                Column(modifier = Modifier.weight(1.3f)) {
+                    Text(
+                        text = "BID AMT (₹)",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = com.example.chitassist.core.ui.theme.Secondary,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 11.sp,
+                        letterSpacing = 0.5.sp
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = bidAmountText,
+                        onValueChange = { bidAmountText = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(64.dp),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        singleLine = true,
+                        enabled = payment.status != PaymentStatus.PAID && canChangeStatus,
+                        shape = RoundedCornerShape(12.dp),
+                        textStyle = MaterialTheme.typography.titleLarge.copy(
+                            fontWeight = FontWeight.ExtraBold,
+                            color = com.example.chitassist.core.ui.theme.Primary
+                        ),
+                        colors = OutlinedTextFieldDefaults.colors(
+                            unfocusedContainerColor = com.example.chitassist.core.ui.theme.Background,
+                            focusedContainerColor = Color.White,
+                            unfocusedBorderColor = com.example.chitassist.core.ui.theme.OutlineVariant,
+                            focusedBorderColor = com.example.chitassist.core.ui.theme.Secondary,
+                            disabledTextColor = Color.Gray,
+                            disabledContainerColor = com.example.chitassist.core.ui.theme.SurfaceContainer
+                        )
+                    )
+                }
+                
+                Spacer(modifier = Modifier.width(16.dp))
+
                 Column(
-                    modifier = Modifier.weight(1.5f),
+                    modifier = Modifier.weight(1f),
                     horizontalAlignment = Alignment.End
                 ) {
-                    if (payment.dividend > 0) {
-                        Text(
-                            text = "Div: + ₹${payment.dividend.toInt()}",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = androidx.compose.ui.graphics.Color(0xFF4CAF50),
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                    Text(
-                        text = currencyFormat.format(payment.netAmount),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary
-                    )
                     Text(
                         text = "NET PAYABLE",
                         style = MaterialTheme.typography.labelSmall,
-                        fontSize = 7.sp,
-                        color = MaterialTheme.colorScheme.outline
+                        color = Color.Gray,
+                        fontWeight = FontWeight.ExtraBold,
+                        fontSize = 11.sp
+                    )
+                    Text(
+                        text = currencyFormat.format(payment.netAmount),
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Black,
+                        color = com.example.chitassist.core.ui.theme.TextSecondary
                     )
                 }
             }
@@ -347,16 +477,19 @@ fun PaymentItem(
 }
 
 @Composable
-fun DetailItem(label: String, value: String, color: androidx.compose.ui.graphics.Color) {
+fun DetailItem(label: String, value: String, color: Color) {
     Column {
         Text(
             text = label,
             style = MaterialTheme.typography.labelSmall,
-            color = color.copy(alpha = 0.7f)
+            color = color.copy(alpha = 0.7f),
+            fontWeight = FontWeight.ExtraBold,
+            fontSize = 11.sp,
+            letterSpacing = 0.5.sp
         )
         Text(
             text = value,
-            style = MaterialTheme.typography.bodyMedium,
+            style = MaterialTheme.typography.bodyLarge,
             color = color,
             fontWeight = FontWeight.Bold
         )

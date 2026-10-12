@@ -42,7 +42,11 @@ fun CalculatorContent(
     state: CalculatorContract.State,
     onIntent: (CalculatorContract.Intent) -> Unit = {}
 ) {
-    val currencyFormat = remember { NumberFormat.getCurrencyInstance(Locale("en", "IN")) }
+    val currencyFormat = remember { 
+        NumberFormat.getCurrencyInstance(Locale("en", "IN")).apply {
+            maximumFractionDigits = 0
+        }
+    }
 
     Scaffold(
         topBar = {
