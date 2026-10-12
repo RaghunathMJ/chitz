@@ -6,8 +6,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.*
@@ -20,8 +18,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.example.chitassist.core.ui.theme.*
+import com.example.chitassist.domain.model.Chit
+import com.example.chitassist.domain.model.ChitStatus
 import com.example.chitassist.feature.dashboard.ChitItem
 import kotlinx.coroutines.flow.collectLatest
 
@@ -44,6 +45,24 @@ fun ChitListScreen(
         }
     }
 
+    ChitListContent(
+        state = state,
+        onChitClick = onChitClick,
+        onAddChit = onAddChit,
+        onEditChit = { viewModel.handleIntent(ChitListContract.Intent.EditChit(it)) },
+        onDeleteChit = { viewModel.handleIntent(ChitListContract.Intent.DeleteChit(it)) }
+    )
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ChitListContent(
+    state: ChitListContract.State,
+    onChitClick: (Long) -> Unit,
+    onAddChit: () -> Unit,
+    onEditChit: (Chit) -> Unit,
+    onDeleteChit: (Chit) -> Unit
+) {
     Scaffold(
         topBar = {
             TopAppBar(
@@ -131,15 +150,15 @@ fun ChitListScreen(
             } else {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
-                    contentPadding = PaddingValues(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 100.dp),
+                    contentPadding = PaddingValues(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 100.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     items(state.chits) { chit ->
                         ChitItem(
                             chit = chit,
                             onClick = { onChitClick(chit.id) },
-                            onEdit = { viewModel.handleIntent(ChitListContract.Intent.EditChit(chit)) },
-                            onDelete = { viewModel.handleIntent(ChitListContract.Intent.DeleteChit(chit)) }
+                            onEdit = { onEditChit(chit) },
+                            onDelete = { onDeleteChit(chit) }
                         )
                     }
                 }
@@ -173,5 +192,79 @@ fun StatCard(label: String, value: String, modifier: Modifier = Modifier, color:
                 fontWeight = FontWeight.Black
             )
         }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun ChitListScreenPreview() {
+    val sampleChits = listOf(
+        Chit(
+            id = 1L,
+            userId = 1L,
+            name = "Kalyan Jewelers Chit",
+            totalValue = 100000.0,
+            monthlyContribution = 5000.0,
+            numberOfInstallments = 20,
+            startDate = System.currentTimeMillis(),
+            paymentDueDay = 10,
+            completedInstallments = 5,
+            status = ChitStatus.ACTIVE
+        ),
+        Chit(
+            id = 2L,
+            userId = 1L,
+            name = "Home Savings",
+            totalValue = 500000.0,
+            monthlyContribution = 10000.0,
+            numberOfInstallments = 50,
+            startDate = System.currentTimeMillis(),
+            paymentDueDay = 5,
+            completedInstallments = 12,
+            status = ChitStatus.ACTIVE
+        )
+    )
+
+    ChitAssistTheme {
+        ChitListContent(
+            state = ChitListContract.State(
+                chits = sampleChits,
+                isLoading = false
+            ),
+            onChitClick = {},
+            onAddChit = {},
+            onEditChit = {},
+            onDeleteChit = {}
+        )
+    }
+}
+
+@Preview(showBackground = true, name = "Chit List - Empty")
+@Composable
+fun ChitListScreenEmptyPreview() {
+    ChitAssistTheme {
+        ChitListContent(
+            state = ChitListContract.State(
+                chits = emptyList(),
+                isLoading = false
+            ),
+            onChitClick = {},
+            onAddChit = {},
+            onEditChit = {},
+            onDeleteChit = {}
+        )
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun StatCardPreview() {
+    ChitAssistTheme {
+        StatCard(
+            label = "Total Active",
+            value = "2",
+            color = Secondary,
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
